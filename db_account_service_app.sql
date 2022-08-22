@@ -31,3 +31,27 @@ CREATE TABLE transfers (
   CONSTRAINT fk_transferto_user FOREIGN KEY (to_account_telp) REFERENCES users(no_telp)
 );
 
+ALTER TABLE top_up  
+DROP FOREIGN KEY  fk_entries_user ;
+ALTER TABLE top_up  
+ADD CONSTRAINT  fk_entries_user FOREIGN KEY ( account_telp) REFERENCES  users  ( no_telp )
+ON DELETE CASCADE
+ON UPDATE CASCADE;
+  
+ALTER TABLE transfers 
+DROP FOREIGN KEY fk_transferfrom_user;
+ALTER TABLE  transfers  
+ADD CONSTRAINT  fk_transferfrom_user FOREIGN KEY ( from_account_telp ) REFERENCES  users  ( no_telp )
+ON DELETE CASCADE
+ON UPDATE CASCADE;
+
+ALTER TABLE transfers 
+DROP FOREIGN KEY fk_transferto_user;
+ALTER TABLE  transfers  
+ADD CONSTRAINT  fk_transferto_user FOREIGN KEY ( to_account_telp ) REFERENCES  users  ( no_telp )
+ON DELETE CASCADE
+ON UPDATE CASCADE;
+
+
+
+

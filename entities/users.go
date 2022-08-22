@@ -1,11 +1,12 @@
 package entities
 
 type Users struct {
-	NoTelp       int
-	Password     string
-	Name         string
-	gender       string
-	SaldoBalance string
-	CreatedAt    string
-	UpdateAt     string
+	NoTelp    int
+	Password  string
+	Name      string
+	Gender    string
+	Balance   int
+	Currency  string
+	CreatedAt string
+	UpdateAt  string
 }

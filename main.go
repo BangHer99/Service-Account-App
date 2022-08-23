@@ -58,9 +58,68 @@ func main() {
 
 					// fitur update
 					case 1:
+						var (
+							updateUser    entities.Users
+							InputName     string
+							InputGender   string
+							InputPassword string
+						)
+
+						fmt.Print("input no. telp want to change : ")
+						fmt.Scan(&updateUser.NoTelp)
+
+						fmt.Print("update username (y/n) : ")
+						fmt.Scan(&InputName)
+						resName, strName, errName := users.UpdateDataUser(db, updateUser, InputName, "", "")
+						if errName != nil {
+							fmt.Println(strName, errName)
+						} else if resName > 0 {
+							fmt.Println("row affected : ", resName)
+						}
+
+						fmt.Print("Update gender (y/n) : ")
+						fmt.Scan(&InputGender)
+						resGen, strGen, errGen := users.UpdateDataUser(db, updateUser, " ", InputGender, " ")
+						if errGen != nil {
+							fmt.Println(strGen, errGen)
+						} else if resGen > 0 {
+							fmt.Println("row Afected : ", resGen)
+						}
+
+						fmt.Print("update password (y/n)")
+						fmt.Scan(&InputPassword)
+						resPass, strPass, errPass := users.UpdateDataUser(db, updateUser, " ", "", InputPassword)
+						if errPass != nil {
+							fmt.Println(strPass, errPass)
+						} else if resPass > 0 {
+							fmt.Println("row affected : ", resPass)
+						}
 
 					// fitur delete
 					case 2:
+						var (
+							deleteUser   entities.Users
+							deleteName   string
+							deleteNoTelp int
+						)
+
+						fmt.Print("delete by name (y/n) : ")
+						fmt.Scan(&deleteName)
+						resName, strName, errName := users.DeleteDataUser(db, deleteUser, deleteName, deleteNoTelp) //<<<<malah int
+						if errName != nil {
+							fmt.Println(strName, errName)
+						} else if resName > 0 {
+							fmt.Println("row affected : ", resName)
+						}
+
+						fmt.Print("delete By No Telepon : (y/n)")
+						fmt.Scan(&deleteNoTelp)
+						resNoTelp, intNotelp, errTelp := users.DeleteDataUser(db, deleteUser, deleteName, deleteNoTelp)
+						if errTelp != nil {
+							fmt.Println(intNotelp, resNoTelp)
+						} else if resNoTelp > 0 {
+							fmt.Println("row affected", resNoTelp)
+						}
 
 					// fitur top up
 					case 3:
@@ -85,15 +144,19 @@ func main() {
 			var newUser entities.Users
 			fmt.Print("input no telp : ")
 			fmt.Scan(&newUser.NoTelp)
+			if newUser.NoTelp != 0 {
+				fmt.Print("input username : ")
+				fmt.Scan(&newUser.Name)
+				if newUser.Name != "" {
+					fmt.Print("input gender : ")
+					fmt.Scan(&newUser.Gender)
+					if newUser.Gender != "" {
+						fmt.Print("input Password : ")
+						fmt.Scan(&newUser.Password)
+					}
+				}
 
-			fmt.Print("input username : ")
-			fmt.Scan(&newUser.Name)
-
-			fmt.Print("input gender : ")
-			fmt.Scan(&newUser.Gender)
-
-			fmt.Print("input password : ")
-			fmt.Scan(&newUser.Password)
+			}
 
 			resInsert, err := users.SignUp(db, newUser)
 

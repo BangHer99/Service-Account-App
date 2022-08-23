@@ -10,3 +10,11 @@ type Users struct {
 	CreatedAt string
 	UpdateAt  string
 }
+
+type OtherUser struct {
+	NoTelp     int
+	Name       string
+	Gender     string
+	Created_at string
+	Updated_at string
+}

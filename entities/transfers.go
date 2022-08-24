@@ -7,3 +7,11 @@ type Transfers struct {
 	Amount            int
 	Created_at        string
 }
+
+type TransferHistory struct {
+	Id                int
+	From_account_name string
+	Amount            int
+	Created_at        string
+	To_account_name   string
+}

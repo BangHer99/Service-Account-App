@@ -15,10 +15,12 @@ CREATE TABLE users (
 
 CREATE TABLE top_up (
   id INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
-  account_telp_ INT NOT NULL,
+  to_account_telp INT NOT NULL,
   amount BIGINT NOT NULL COMMENT "must be positive",
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  CONSTRAINT fk_entries_user FOREIGN KEY (account_telp) REFERENCES users(no_telp)
+  CONSTRAINT fk_entries_user FOREIGN KEY (to_account_telp) REFERENCES users(no_telp)
+  ON DELETE CASCADE
+  ON UPDATE CASCADE
 );
 
 CREATE TABLE transfers (
@@ -27,37 +29,12 @@ CREATE TABLE transfers (
   to_account_telp INT NOT NULL,
   amount BIGINT NOT NULL COMMENT "must be positive",
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  CONSTRAINT fk_transferfrom_user FOREIGN KEY (from_account_telp) REFERENCES users(no_telp),
+  CONSTRAINT fk_transferfrom_user FOREIGN KEY (from_account_telp) REFERENCES users(no_telp)
+  ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT fk_transferto_user FOREIGN KEY (to_account_telp) REFERENCES users(no_telp)
+  ON DELETE CASCADE
+  ON UPDATE CASCADE
 );
-
-ALTER TABLE top_up  
-DROP FOREIGN KEY  fk_entries_user ;
-ALTER TABLE top_up  
-ADD CONSTRAINT  fk_entries_user FOREIGN KEY (account_telp) REFERENCES  users  ( no_telp )
-ON DELETE CASCADE
-ON UPDATE CASCADE;
-  
-ALTER TABLE transfers 
-DROP FOREIGN KEY fk_transferfrom_user;
-ALTER TABLE  transfers  
-ADD CONSTRAINT  fk_transferfrom_user FOREIGN KEY ( from_account_telp ) REFERENCES  users  ( no_telp )
-ON DELETE CASCADE
-ON UPDATE CASCADE;
-
-ALTER TABLE transfers 
-DROP FOREIGN KEY fk_transferto_user;
-ALTER TABLE  transfers  
-ADD CONSTRAINT  fk_transferto_user FOREIGN KEY ( to_account_telp ) REFERENCES  users  ( no_telp )
-ON DELETE CASCADE
-ON UPDATE CASCADE;
 
 SET FOREIGN_KEY_CHECKS=0;
 SET GLOBAL  FOREIGN_KEY_CHECKS=0;
-
-
-
-
-
-
-

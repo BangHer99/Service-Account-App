@@ -84,3 +84,33 @@ func Transfer(db *sql.DB, fromId, toId int, transfer entities.Transfers) (int, e
 
 	return 0, nil, ress
 }
+
+func TransferHistory(db *sql.DB, FromId int, transferH entities.TransferHistory) ([]entities.TransferHistory, error) {
+	statementTH, err := db.Query("SELECT t.id, u.name_user, t.amount, t.created_at, t.to_account_telp FROM users u INNER JOIN transfers t ON t.from_account_telp = u.no_telp WHERE t.from_account_telp=? OR t.to_account_telp=?", FromId, FromId)
+	if err != nil {
+		return nil, err
+	}
+
+	var transferHis []entities.TransferHistory
+	for statementTH.Next() {
+		var rowTransfer entities.TransferHistory
+		var temp int
+		errTh := statementTH.Scan(&rowTransfer.Id, &rowTransfer.From_account_name, &rowTransfer.Amount, &rowTransfer.Created_at, &temp)
+		if errTh != nil {
+			return nil, err
+		}
+		statementconv, errqry := db.Query("SELECT name_user FROM users WHERE no_telp=?", temp)
+		if errqry != nil {
+			return nil, errqry
+		}
+		for statementconv.Next() {
+			errConv := statementconv.Scan(&rowTransfer.To_account_name)
+			if errConv != nil {
+				return nil, errConv
+			} else {
+				transferHis = append(transferHis, rowTransfer)
+			}
+		}
+	}
+	return transferHis, nil
+}

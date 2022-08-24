@@ -6,6 +6,7 @@ import (
 	"be11/account-service-app/controllers/users"
 	"be11/account-service-app/entities"
 	"fmt"
+	"os"
 )
 
 func main() {
@@ -15,11 +16,15 @@ func main() {
 	var back = "n"
 
 	for back != "y" {
+		if back == "close" {
+			fmt.Println("Terimakasih telah bertransaks")
+			os.Exit(1)
+		}
 
 		var option = 0
 
 		// menu sign in dan sign up
-		fmt.Print("Account Service\n 1. Sign In\n 2. Sign Up\n 3. Exit\n")
+		fmt.Print("Account Service\n 1. Sign In\n 2. Sign Up\n")
 		fmt.Print("Enter your choice : ")
 		fmt.Scan(&option)
 
@@ -34,28 +39,25 @@ func main() {
 			fmt.Scan(&inputPass)
 
 			var backMenu = ""
-			var tempName = ""
 			for backMenu != "n" {
 				dataUser, err, strErr := users.SignIn(db, inputTelp, inputPass)
 				if err != nil {
 					fmt.Print(strErr, err)
 				} else {
-					fmt.Print("\n----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------\n")
+					fmt.Print("\n---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------\n")
 					for _, v := range dataUser {
 						if v.Gender == "men" {
 							v.Gender += "\t"
 						}
 						fmt.Println("| Username :", v.Name, "\t", "| Gender :", v.Gender, "\t", "| no telp :", v.NoTelp, "\t",
 							"| Currency :", v.Currency, "\t", "| Balance :", v.Balance, "\t", "| Created_at :", v.CreatedAt, "\t", "| Updated_at :", v.UpdateAt, "|")
-
-						tempName = v.Name
 					}
-					fmt.Println("----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------")
+					fmt.Println("--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------")
 
 					// Menu setelah log in
 					var optionMenuLog int
 
-					fmt.Print("Account Service\n 1. Search Other User\n 2. Update Data\n 3. Delete Data\n 4. Top Up \n 5. Transfer\n 6. Top Up History\n 7. Transfer History\n 8. Exit Porgram\n")
+					fmt.Print("Account Service\n 1. Search Other User\n 2. Update Data\n 3. Delete Data\n 4. Top Up \n 5. Transfer\n 6. Top Up History\n 7. Transfer History\n 8. Exit Porgram")
 					fmt.Print("Enter Your Choice : ")
 					fmt.Scan(&optionMenuLog)
 
@@ -69,20 +71,32 @@ func main() {
 
 						resRead, errRead, strErrRead := users.ReadOtherUser(db, inputRead)
 						if errRead != nil {
-							fmt.Println(strErrRead, errRead)
-						} else if len(resRead) == 0 {
-							fmt.Println("phone number not found")
+							fmt.Print(strErrRead, errRead)
 						} else {
 
-							fmt.Print("\n----------------------------------------------------------------------------------------------------------------------------\n")
+							fmt.Print("\n------------------------------------------------------------------------------------------------------------------------------\n")
 							for _, v := range resRead {
 								if v.Gender == "men" {
 									v.Gender += "\t"
 								}
 								fmt.Println("| Username :", v.Name, "\t", "| Gender :", v.Gender, "\t", "| Created_at :", v.Created_at, "\t", "| Updated_at :", v.Updated_at, "|")
 							}
-							fmt.Println("----------------------------------------------------------------------------------------------------------------------------")
+							fmt.Println("--------------------------------------------------------------------------------------------------------------------------------")
 
+						}
+
+						backMenu = "kosong"
+
+						for backMenu == "kosong" {
+							fmt.Print("Back to Menu (y/n) : ")
+							fmt.Scan(&backMenu)
+
+							if backMenu != "y" && backMenu != "n" {
+								fmt.Println("input wrong, please input y or n")
+								backMenu = "kosong"
+							} else if backMenu == "n" {
+								back = "close"
+							}
 						}
 
 					// fitur update
@@ -124,6 +138,20 @@ func main() {
 							fmt.Println("row affected : ", resPass)
 						}
 
+						backMenu = "kosong"
+
+						for backMenu == "kosong" {
+							fmt.Print("Back to Menu (y/n) : ")
+							fmt.Scan(&backMenu)
+
+							if backMenu != "y" && backMenu != "n" {
+								fmt.Println("input wrong, please input y or n")
+								backMenu = "kosong"
+							} else if backMenu == "n" {
+								back = "close"
+							}
+						}
+
 					// fitur delete
 					case 3:
 
@@ -149,6 +177,20 @@ func main() {
 							fmt.Println(intNotelp, resNoTelp)
 						} else if resNoTelp > 0 {
 							fmt.Println("row affected", resNoTelp)
+						}
+
+						backMenu = "kosong"
+
+						for backMenu == "kosong" {
+							fmt.Print("Back to Menu (y/n) : ")
+							fmt.Scan(&backMenu)
+
+							if backMenu != "y" && backMenu != "n" {
+								fmt.Println("input wrong, please input y or n")
+								backMenu = "kosong"
+							} else if backMenu == "n" {
+								back = "close"
+							}
 						}
 
 					// fitur top up
@@ -179,39 +221,6 @@ func main() {
 							}
 						}
 
-					// fitur top up history
-					case 6:
-
-					// fitur transfer history
-					case 7:
-
-						var transferHistory entities.TransferHistory
-						ressTh, errTh := transfers.TransferHistory(db, inputTelp, transferHistory)
-						if errTh != nil {
-							fmt.Println(errTh.Error())
-						} else if len(ressTh) == 0 {
-							fmt.Println("phone number not found")
-						} else {
-
-							fmt.Print("\n------------------------------------------------------------------------------------------------------------------------------------------------------\n")
-							for _, v := range ressTh {
-								if v.From_account_name == tempName {
-									fmt.Println("| date transfer :", v.Created_at, "\t", "| id :", v.Id, "\t", "| from :", v.From_account_name, "\t", "| to :", v.To_account_name, "\t", "| Amount : -", v.Amount, "\t", "| Spent Money By transasfer  |")
-								} else if v.To_account_name == tempName {
-									fmt.Println("| date transfer :", v.Created_at, "\t", "| id :", v.Id, "\t", "| to :", v.To_account_name, "\t", "| from :", v.From_account_name, "\t", "| Amount : +", v.Amount, "\t", "| Receive money By transfers |")
-								}
-							}
-							fmt.Println("------------------------------------------------------------------------------------------------------------------------------------------------------")
-
-						}
-					// fitur exit
-					case 8:
-						back = "y"
-						backMenu = "n"
-
-					}
-
-					if back != "y" && backMenu != "n" {
 						backMenu = "kosong"
 
 						for backMenu == "kosong" {
@@ -222,9 +231,20 @@ func main() {
 								fmt.Println("input wrong, please input y or n")
 								backMenu = "kosong"
 							} else if backMenu == "n" {
-								back = "y"
+								back = "close"
 							}
 						}
+
+					// fitur top up history
+					case 6:
+
+					// fitur transfer history
+					case 7:
+
+					// fitur exit
+					case 8:
+						fmt.Println("Terimakasih telah bertransaks")
+						os.Exit(1)
 					}
 
 				}
@@ -234,43 +254,29 @@ func main() {
 			// fitur sign up
 		} else if option == 2 {
 
-			var succes string
+			var newUser entities.Users
+			fmt.Print("input no telp : ")
+			fmt.Scan(&newUser.NoTelp)
 
-			for succes != "y" {
-				var newUser entities.Users
-				fmt.Print("input no telp : ")
-				fmt.Scan(&newUser.NoTelp)
+			fmt.Print("input username : ")
+			fmt.Scan(&newUser.Name)
 
-				fmt.Print("input username : ")
-				fmt.Scan(&newUser.Name)
+			fmt.Print("input gender : ")
+			fmt.Scan(&newUser.Gender)
 
-				fmt.Print("input gender : ")
-				fmt.Scan(&newUser.Gender)
+			fmt.Print("input password : ")
+			fmt.Scan(&newUser.Password)
 
-				fmt.Print("input password : ")
-				fmt.Scan(&newUser.Password)
+			resInsert, err := users.SignUp(db, newUser)
 
-				if newUser.NoTelp != 0 && newUser.Name != "" && newUser.Gender != "" && newUser.Password != "" {
-					resInsert, err := users.SignUp(db, newUser)
-					if err != nil {
-						fmt.Print("sign up error :", err.Error())
-					} else if resInsert > 0 {
-						fmt.Print("Sign Up success\n")
-						succes = "y"
-					}
-				} else {
-					fmt.Println("Mohon lengkapi data terlebih dahulu")
-				}
+			if err != nil {
+				fmt.Print("sign up error :", err.Error())
+			} else if resInsert > 0 {
+				fmt.Print("Sign Up success\n")
+
 			}
-		} else if option == 3 {
-			back = "y"
 
-		} else {
-			fmt.Println("input wrong, please input 1,2 or 3")
 		}
-	}
-	if back == "y" {
-		fmt.Println("Terima Kasih Telah Bertransaksi")
 	}
 
 }

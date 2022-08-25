@@ -5,8 +5,16 @@ type Users struct {
 	Password  string
 	Name      string
 	Gender    string
+	Balance   int
 	Currency  string
-	Balance   string
 	CreatedAt string
 	UpdateAt  string
+}
+
+type OtherUser struct {
+	NoTelp     int
+	Name       string
+	Gender     string
+	Created_at string
+	Updated_at string
 }

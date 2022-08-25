@@ -149,3 +149,25 @@ func DeleteDataUser(db *sql.DB, deleteUser entities.Users, deleteByName string, 
 	return 0, "Success", nil
 
 }
+
+func ReadOtherUser(db *sql.DB, inputReadTelp string) ([]entities.OtherUser, error, string) {
+	statementReadUserByNoTelp, err := db.Query("SELECT name_user, gender, created_at, updated_at FROM users WHERE no_telp=?", inputReadTelp)
+	if err != nil {
+		return nil, err, "phone number not found"
+	}
+
+	otherUser := []entities.OtherUser{}
+	for statementReadUserByNoTelp.Next() {
+		var rowUser entities.OtherUser
+		err := statementReadUserByNoTelp.Scan(&rowUser.Name, &rowUser.Gender, &rowUser.Created_at, &rowUser.Updated_at)
+		if err != nil {
+			return nil, err, ""
+		}
+
+		otherUser = append(otherUser, rowUser)
+
+	}
+
+	return otherUser, nil, ""
+
+}

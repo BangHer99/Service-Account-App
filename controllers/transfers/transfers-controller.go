@@ -6,6 +6,7 @@ import (
 )
 
 func Transfer(db *sql.DB, fromId, toId int, transfer entities.Transfers) (int, error, string) {
+
 	var ress string
 	statementInsertTransfer, errIns := db.Prepare("INSERT INTO transfers(from_account_telp, to_account_telp, amount) VALUES (?,?,?)")
 	if errIns != nil {
@@ -34,7 +35,7 @@ func Transfer(db *sql.DB, fromId, toId int, transfer entities.Transfers) (int, e
 			return -1, err, "error scan"
 		}
 
-		if rowUser.Balance > transfer.Amount {
+		if rowUser.Balance >= transfer.Amount {
 			updateBalance, errIns := db.Prepare("UPDATE users SET balance=? WHERE no_telp=?")
 			if errIns != nil {
 				return -1, errIns, "error exec"
@@ -86,7 +87,8 @@ func Transfer(db *sql.DB, fromId, toId int, transfer entities.Transfers) (int, e
 }
 
 func TransferHistory(db *sql.DB, FromId int, transferH entities.TransferHistory) ([]entities.TransferHistory, error) {
-	statementTH, err := db.Query("SELECT t.id, u.name_user, t.amount, t.created_at, t.to_account_telp FROM users u INNER JOIN transfers t ON t.from_account_telp = u.no_telp WHERE t.from_account_telp=? OR t.to_account_telp=?", FromId, FromId)
+
+	statementTH, err := db.Query("SELECT t.id, u.name_user, t.amount, t.created_at, t.to_account_telp FROM users u INNER JOIN transfers t ON t.from_account_telp = u.no_telp WHERE t.from_account_telp=? OR t.to_account_telp=? ORDER BY t.id DESC", FromId, FromId)
 	if err != nil {
 		return nil, err
 	}

@@ -2,15 +2,23 @@ package main
 
 import (
 	"be11/account-service-app/config"
+	"be11/account-service-app/controllers/topups"
 	"be11/account-service-app/controllers/transfers"
 	"be11/account-service-app/controllers/users"
 	"be11/account-service-app/entities"
+	"bufio"
 	"fmt"
+	"os"
+	"strings"
+
+	"golang.org/x/crypto/bcrypt"
 )
 
 func main() {
 	db := config.ConnectToDatabase()
 	defer db.Close()
+
+	reader := bufio.NewReader(os.Stdin)
 
 	var back = "n"
 
@@ -39,6 +47,10 @@ func main() {
 				dataUser, err, strErr := users.SignIn(db, inputTelp, inputPass)
 				if err != nil {
 					fmt.Print(strErr, err)
+					backMenu = "n"
+				} else if len(dataUser) == 0 {
+					fmt.Println("Account not found")
+					backMenu = "n"
 				} else {
 					fmt.Print("\n----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------\n")
 					for _, v := range dataUser {
@@ -55,7 +67,7 @@ func main() {
 					// Menu setelah log in
 					var optionMenuLog int
 
-					fmt.Print("Account Service\n 1. Search Other User\n 2. Update Data\n 3. Delete Data\n 4. Top Up \n 5. Transfer\n 6. Top Up History\n 7. Transfer History\n 8. Exit Porgram\n")
+					fmt.Print("Menu Account Service\n 1. Search Other User\n 2. Update Data\n 3. Delete Account\n 4. Top Up \n 5. Transfer\n 6. Top Up History\n 7. Transfer History\n 8. Exit Porgram\n")
 					fmt.Print("Enter Your Choice : ")
 					fmt.Scan(&optionMenuLog)
 
@@ -63,6 +75,7 @@ func main() {
 
 					// fitur read other user
 					case 1:
+
 						var inputRead string
 						fmt.Print("input phone number other user : ")
 						fmt.Scan(&inputRead)
@@ -87,75 +100,91 @@ func main() {
 
 					// fitur update
 					case 2:
-						var (
-							updateUser    entities.Users
-							InputName     string
-							InputGender   string
-							InputPassword string
-						)
 
-						fmt.Print("input no. telp want to change : ")
-						fmt.Scan(&updateUser.NoTelp)
+						var updateUser entities.Users
 
-						fmt.Print("update username (y/n) : ")
-						fmt.Scan(&InputName)
-						resName, strName, errName := users.UpdateDataUser(db, updateUser, InputName, "", "")
-						if errName != nil {
-							fmt.Println(strName, errName)
-						} else if resName > 0 {
-							fmt.Println("row affected : ", resName)
+						fmt.Print("Update username : ")
+						updateUser.Name, _ = reader.ReadString('\n')
+						updateUser.Name = strings.TrimSuffix(updateUser.Name, "\n")
+
+						fmt.Print("Update gender : ")
+						updateUser.Gender, _ = reader.ReadString('\n')
+						updateUser.Gender = strings.TrimSuffix(updateUser.Gender, "\n")
+
+						fmt.Print("Update password : ")
+						updateUser.Password, _ = reader.ReadString('\n')
+						updateUser.Password = strings.TrimSuffix(updateUser.Password, "\n")
+
+						succes, strUpt, errUptusers := users.UpdateDataUser(db, &updateUser, inputTelp)
+						if err != nil {
+							fmt.Print(strUpt, errUptusers)
+						} else if succes > 0 {
+							fmt.Println("row affected : ", succes, "\n update success")
 						}
 
-						fmt.Print("Update gender (y/n) : ")
-						fmt.Scan(&InputGender)
-						resGen, strGen, errGen := users.UpdateDataUser(db, updateUser, " ", InputGender, " ")
-						if errGen != nil {
-							fmt.Println(strGen, errGen)
-						} else if resGen > 0 {
-							fmt.Println("row Afected : ", resGen)
-						}
-
-						fmt.Print("update password (y/n)")
-						fmt.Scan(&InputPassword)
-						resPass, strPass, errPass := users.UpdateDataUser(db, updateUser, " ", "", InputPassword)
-						if errPass != nil {
-							fmt.Println(strPass, errPass)
-						} else if resPass > 0 {
-							fmt.Println("row affected : ", resPass)
+						if updateUser.Password != "" {
+							inputPass = updateUser.Password
 						}
 
 					// fitur delete
 					case 3:
 
-						var (
-							deleteUser   entities.Users
-							deleteName   string
-							deleteNoTelp int
-						)
+						var selectOption string
 
-						fmt.Print("delete by name (y/n) : ")
-						fmt.Scan(&deleteName)
-						resName, strName, errName := users.DeleteDataUser(db, deleteUser, deleteName, deleteNoTelp) //<<<<malah int
-						if errName != nil {
-							fmt.Println(strName, errName)
-						} else if resName > 0 {
-							fmt.Println("row affected : ", resName)
-						}
+						for selectOption != "y" && selectOption != "n" {
 
-						fmt.Print("delete By No Telepon : (y/n)")
-						fmt.Scan(&deleteNoTelp)
-						resNoTelp, intNotelp, errTelp := users.DeleteDataUser(db, deleteUser, deleteName, deleteNoTelp)
-						if errTelp != nil {
-							fmt.Println(intNotelp, resNoTelp)
-						} else if resNoTelp > 0 {
-							fmt.Println("row affected", resNoTelp)
+							fmt.Print("apakah anda yakin ingin menghapus akun? (y/n) : ")
+							fmt.Scan(&selectOption)
+
+							if selectOption == "y" {
+								ress, strErrr, errDel := users.DeleteDataUser(db, inputTelp)
+								if errDel != nil {
+									fmt.Print(strErrr, errDel)
+								} else if ress >= 0 {
+									fmt.Println("Succes Delete Account")
+								}
+
+								backMenu = "n"
+
+							} else if selectOption == "n" {
+
+								backMenu = "y"
+
+							} else {
+
+								fmt.Println("input wrong, Please input y or n")
+
+							}
+
 						}
 
 					// fitur top up
 					case 4:
 
+						var topup entities.TopUps
+						var toTelp int
+						fmt.Print("input to account for top-up (no_telp) : ")
+						fmt.Scan(&toTelp)
+
+						if toTelp != -1 {
+							fmt.Print("input amout : ")
+							fmt.Scan(&topup.Amount)
+
+						}
+
+						_, errTop, strTop := topups.TopUp(db, inputTelp, toTelp, topup)
+						if errTop != nil {
+							fmt.Println(errTop, strTop)
+						} else {
+							fmt.Println(strTop)
+							for _, value := range dataUser {
+								value.Balance += topup.Amount
+							}
+						}
+
 					// fitur transfer
 					case 5:
+
 						var transfer entities.Transfers
 
 						fmt.Println("From account transfer(no_telp) : ", inputTelp)
@@ -164,8 +193,11 @@ func main() {
 						fmt.Print("input to account transfer(no_telp) : ")
 						fmt.Scan(&transfer.To_account_telp)
 
-						fmt.Print("input amount : ")
-						fmt.Scan(&transfer.Amount)
+						if transfer.To_account_telp != 0 {
+							fmt.Print("input amount : ")
+							fmt.Scan(&transfer.Amount)
+
+						}
 
 						toId := transfer.To_account_telp
 
@@ -181,6 +213,26 @@ func main() {
 
 					// fitur top up history
 					case 6:
+
+						var historytopup entities.TopUpHistory
+
+						ressHT, errHt := topups.ToupUpHistory(db, inputTelp, historytopup)
+						if errHt != nil {
+							fmt.Println(errHt.Error())
+						} else if len(ressHT) == 0 {
+							fmt.Println("phone number not found")
+						} else {
+
+							fmt.Print("\n-----------------------------------------------------------------------------------------------------------------------------------------------------------\n")
+							for _, v := range ressHT {
+								if v.NameUser == tempName {
+									fmt.Println("| date topup :", v.CreatedAt, "\t", "| from : ", v.NameUser, "\t", "| to :", v.To_account_name, "\t", "| Amount : +", v.Amount, "\t", "| Receive Money By Topup  |")
+								} else {
+									fmt.Println("| date topup :", v.CreatedAt, "\t", "| to :", v.To_account_name, "\t", "| from : ", v.NameUser, "\t", "| Amount : +", v.Amount, "\t", "| Receive Money By Topup  |")
+								}
+							}
+							fmt.Println("-----------------------------------------------------------------------------------------------------------------------------------------------------------")
+						}
 
 					// fitur transfer history
 					case 7:
@@ -206,6 +258,7 @@ func main() {
 						}
 					// fitur exit
 					case 8:
+
 						back = "y"
 						backMenu = "n"
 
@@ -242,18 +295,24 @@ func main() {
 				fmt.Scan(&newUser.NoTelp)
 
 				fmt.Print("input username : ")
-				fmt.Scan(&newUser.Name)
+				newUser.Name, _ = reader.ReadString('\n')
+				newUser.Name = strings.TrimSuffix(newUser.Name, "\n")
 
 				fmt.Print("input gender : ")
-				fmt.Scan(&newUser.Gender)
+				newUser.Gender, _ = reader.ReadString('\n')
+				newUser.Gender = strings.TrimSuffix(newUser.Gender, "\n")
 
 				fmt.Print("input password : ")
-				fmt.Scan(&newUser.Password)
+				newUser.Password, _ = reader.ReadString('\n')
+				newUser.Password = strings.TrimSuffix(newUser.Password, "\n")
+				inputPassByte := []byte(newUser.Password)
+				hardPass, _ := bcrypt.GenerateFromPassword(inputPassByte, bcrypt.DefaultCost)
+				newUser.Password = string(hardPass)
 
-				if newUser.NoTelp != 0 && newUser.Name != "" && newUser.Gender != "" && newUser.Password != "" {
-					resInsert, err := users.SignUp(db, newUser)
+				if newUser.NoTelp != -1 && newUser.Name != "" && newUser.Gender != "" && newUser.Password != "" {
+					resInsert, err := users.SignUp(db, &newUser)
 					if err != nil {
-						fmt.Print("sign up error :", err.Error())
+						fmt.Print("sign up error :", err.Error(), "\n")
 					} else if resInsert > 0 {
 						fmt.Print("Sign Up success\n")
 						succes = "y"

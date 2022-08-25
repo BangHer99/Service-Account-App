@@ -3,10 +3,12 @@ package users
 import (
 	"be11/account-service-app/entities"
 	"database/sql"
-	"fmt"
+
+	"golang.org/x/crypto/bcrypt"
 )
 
-func SignUp(db *sql.DB, register entities.Users) (int, error) {
+func SignUp(db *sql.DB, register *entities.Users) (int, error) {
+
 	statementRegis, err := db.Prepare("INSERT INTO users(no_telp, password_user, name_user, gender, balance, currency) VALUES (?,?,?,?,?,?)")
 	if err != nil {
 		return -1, err
@@ -26,9 +28,10 @@ func SignUp(db *sql.DB, register entities.Users) (int, error) {
 }
 
 func SignIn(db *sql.DB, inputTelp int, inputPass string) ([]entities.Users, error, string) {
+
 	statementLogin, err := db.Query("SELECT * FROM users WHERE no_telp=?", inputTelp)
 	if err != nil {
-		return nil, err, "phone number not registeredr"
+		return nil, err, "phone number not registered"
 	}
 
 	dataUser := []entities.Users{}
@@ -41,7 +44,8 @@ func SignIn(db *sql.DB, inputTelp int, inputPass string) ([]entities.Users, erro
 
 		dataUser = append(dataUser, rowUser)
 
-		if rowUser.Password == inputPass {
+		errMatch := bcrypt.CompareHashAndPassword([]byte(rowUser.Password), []byte(inputPass))
+		if errMatch == nil {
 			return dataUser, nil, "succes"
 		} else {
 			return nil, err, "password wrong "
@@ -53,104 +57,108 @@ func SignIn(db *sql.DB, inputTelp int, inputPass string) ([]entities.Users, erro
 
 }
 
-func UpdateDataUser(db *sql.DB, updateUser entities.Users, InputName, InputGender, InputPassword string) (int, string, error) {
-	if InputName == "y" {
-		fmt.Print("Update username : ")
-		fmt.Scan(&updateUser.Name)
+func UpdateDataUser(db *sql.DB, updateUser *entities.Users, inputTelp int) (int, string, error) {
 
-		statement, err := db.Prepare("UPDATE users SET name_user = ? WHERE no_telp = ?")
+	if updateUser.Name != "" && updateUser.Password != "" && updateUser.Gender != "" {
+		statement, err := db.Prepare("UPDATE users SET name_user = ?, gender = ?, password_user = ? WHERE no_telp = ?")
 		if err != nil {
 			return -1, "error statement : ", err
 		}
-		resUpdate, err := statement.Exec(updateUser.Name, updateUser.NoTelp)
+		resUpdate, err := statement.Exec(updateUser.Name, updateUser.Gender, updateUser.Password, inputTelp)
 		if err != nil {
 			return -1, "error update : ", err
 		} else {
 			row, _ := resUpdate.RowsAffected()
 			return int(row), "succes update", nil
 		}
-	}
 
-	if InputGender == "y" {
-		fmt.Print("Update Gender : ")
-		fmt.Scan(&updateUser.Gender)
-
-		statement, err := db.Prepare("UPDATE users SET gender = ? WHERE no_telp=?")
+	} else if updateUser.Name != "" && updateUser.Password != "" && updateUser.Gender == "" {
+		statement, err := db.Prepare("UPDATE users SET name_user = ?, gender = ? WHERE no_telp = ?")
 		if err != nil {
 			return -1, "error statement : ", err
 		}
-		resUpdate, err := statement.Exec(updateUser.Gender, updateUser.NoTelp)
+		resUpdate, err := statement.Exec(updateUser.Name, updateUser.Gender, inputTelp)
 		if err != nil {
 			return -1, "error update : ", err
 		} else {
 			row, _ := resUpdate.RowsAffected()
-			return int(row), "Succes Update", nil
+			return int(row), "succes update", nil
 		}
-	}
-
-	if InputPassword == "y" {
-		fmt.Print("Update Password : ")
-		fmt.Scan(&updateUser.Password)
-
-		statement, err := db.Prepare("UPDATE users SET password_user = ? WHERE no_telp=?")
+	} else if updateUser.Name != "" && updateUser.Password != "" && updateUser.Gender == "" {
+		statement, err := db.Prepare("UPDATE users SET name_user = ? password_user = ? WHERE no_telp = ?")
 		if err != nil {
 			return -1, "error statement : ", err
 		}
-		resUpdate, err := statement.Exec(&updateUser.Password, updateUser.NoTelp)
+		resUpdate, err := statement.Exec(updateUser.Name, updateUser.Password, inputTelp)
 		if err != nil {
 			return -1, "error update : ", err
 		} else {
 			row, _ := resUpdate.RowsAffected()
-			return int(row), "Success Update", nil
+			return int(row), "succes update", nil
 		}
+	} else if updateUser.Name != "" && updateUser.Password == "" && updateUser.Gender == "" {
+		statement, err := db.Prepare("UPDATE users SET name_user = ? WHERE no_telp = ?")
+		if err != nil {
+			return -1, "error statement : ", err
+		}
+		resUpdate, err := statement.Exec(updateUser.Name, inputTelp)
+		if err != nil {
+			return -1, "error update : ", err
+		} else {
+			row, _ := resUpdate.RowsAffected()
+			return int(row), "succes update", nil
+		}
+	} else if updateUser.Name == "" && updateUser.Password != "" && updateUser.Gender != "" {
+		statement, err := db.Prepare("UPDATE users SET gender = ?, password_user = ? WHERE no_telp = ?")
+		if err != nil {
+			return -1, "error statement : ", err
+		}
+		resUpdate, err := statement.Exec(updateUser.Gender, updateUser.Password, inputTelp)
+		if err != nil {
+			return -1, "error update : ", err
+		} else {
+			row, _ := resUpdate.RowsAffected()
+			return int(row), "succes update", nil
+		}
+	} else if updateUser.Name == "" && updateUser.Password == "" && updateUser.Gender != "" {
+		statement, err := db.Prepare("UPDATE users SET gender = ? WHERE no_telp = ?")
+		if err != nil {
+			return -1, "error statement : ", err
+		}
+		resUpdate, err := statement.Exec(updateUser.Gender, inputTelp)
+		if err != nil {
+			return -1, "error update : ", err
+		} else {
+			row, _ := resUpdate.RowsAffected()
+			return int(row), "succes update", nil
+		}
+	} else {
+		return 0, "", nil
 	}
-	return 0, "success update", nil
 
 }
 
-func DeleteDataUser(db *sql.DB, deleteUser entities.Users, deleteByName string, deleteByNoTelp int) (int, string, error) {
-	if deleteByName == "y" {
-		fmt.Print("delete name")
-		fmt.Scan(&deleteUser.Name)
+func DeleteDataUser(db *sql.DB, inputTelp int) (int, string, error) {
 
-		statement, err := db.Prepare("DELETE FROM users WHERE no_telp=?")
-		if err != nil {
-			return -1, "error statement : ", err
-		}
-		resDelete, err := statement.Exec(deleteUser.Name)
-		if err != nil {
-			return -1, "Error Delete : ", err
-		} else {
-			row, _ := resDelete.RowsAffected()
-			if row > 0 {
-				return -1, "error row afected : ", err
-			}
-			return int(row), "succes delete", err
-		}
+	statement, err := db.Prepare("DELETE FROM users WHERE no_telp=?")
+	if err != nil {
+		return -1, "error statement : ", err
 	}
-	if deleteByNoTelp == 1 {
-		fmt.Print("delete no. telp : ")
-		fmt.Scan(&deleteUser.NoTelp)
-
-		statement, err := db.Prepare("DELETE FROM  users WHERE no_telp=?")
-		if err != nil {
-			return -1, "error statement : ", err
+	resDelete, err := statement.Exec(inputTelp)
+	if err != nil {
+		return -1, "Error Delete : ", err
+	} else {
+		row, errDel := resDelete.RowsAffected()
+		if errDel != nil {
+			return -1, "Error Delete", errDel
 		}
-		resDelete, err := statement.Exec(deleteUser.Name)
-		if err != nil {
-			return -1, "error delete : ", err
-		} else {
-			row, _ := resDelete.RowsAffected()
-			if row > 0 {
-				return -1, "error row Afected : ", err
-			}
-		}
+		return int(row), "succes delete", err
 	}
-	return 0, "Success", nil
 
 }
 
 func ReadOtherUser(db *sql.DB, inputReadTelp string) ([]entities.OtherUser, error, string) {
+
 	statementReadUserByNoTelp, err := db.Query("SELECT name_user, gender, created_at, updated_at FROM users WHERE no_telp=?", inputReadTelp)
 	if err != nil {
 		return nil, err, "phone number not found"

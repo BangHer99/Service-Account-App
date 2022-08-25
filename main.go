@@ -262,6 +262,10 @@ func main() {
 						back = "y"
 						backMenu = "n"
 
+					default:
+
+						fmt.Println("input wrong, please input 1 - 8 ")
+
 					}
 
 					if back != "y" && backMenu != "n" {

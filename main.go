@@ -115,15 +115,19 @@ func main() {
 						updateUser.Password, _ = reader.ReadString('\n')
 						updateUser.Password = strings.TrimSuffix(updateUser.Password, "\n")
 
+						if updateUser.Password != "" {
+							inputPass = updateUser.Password
+						}
+
+						updatePassByte := []byte(updateUser.Password)
+						hashPass, _ := bcrypt.GenerateFromPassword(updatePassByte, bcrypt.DefaultCost)
+						updateUser.Password = string(hashPass)
+
 						succes, strUpt, errUptusers := users.UpdateDataUser(db, &updateUser, inputTelp)
 						if err != nil {
 							fmt.Print(strUpt, errUptusers)
-						} else if succes > 0 {
-							fmt.Println("row affected : ", succes, "\n update success")
-						}
-
-						if updateUser.Password != "" {
-							inputPass = updateUser.Password
+						} else if succes >= 0 {
+							fmt.Println("\n update success ")
 						}
 
 					// fitur delete
@@ -260,32 +264,32 @@ func main() {
 					case 8:
 
 						back = "y"
-						backMenu = "n"
 
 					default:
 
-						fmt.Println("input wrong, please input 1 - 8 ")
+						fmt.Println("input wrong, please input 1, 2, 3, 4, 5, 6 ,7 or 8 ")
 
 					}
 
-					if back != "y" && backMenu != "n" {
-						backMenu = "kosong"
+					if optionMenuLog == 1 || optionMenuLog == 2 || optionMenuLog == 4 || optionMenuLog == 5 || optionMenuLog == 6 || optionMenuLog == 7 {
+						if back != "y" && backMenu != "n" {
+							backMenu = "kosong"
 
-						for backMenu == "kosong" {
-							fmt.Print("Back to Menu (y/n) : ")
-							fmt.Scan(&backMenu)
+							for backMenu == "kosong" {
+								fmt.Print("Back to Menu (y/n) : ")
+								fmt.Scan(&backMenu)
 
-							if backMenu != "y" && backMenu != "n" {
-								fmt.Println("input wrong, please input y or n")
-								backMenu = "kosong"
-							} else if backMenu == "n" {
-								back = "y"
+								if backMenu != "y" && backMenu != "n" {
+									fmt.Println("input wrong, please input y or n")
+									backMenu = "kosong"
+								} else if backMenu == "n" {
+									back = "y"
+								}
 							}
 						}
+
 					}
-
 				}
-
 			}
 
 			// fitur sign up

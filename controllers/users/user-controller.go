@@ -72,7 +72,7 @@ func UpdateDataUser(db *sql.DB, updateUser *entities.Users, inputTelp int) (int,
 			return int(row), "succes update", nil
 		}
 
-	} else if updateUser.Name != "" && updateUser.Password != "" && updateUser.Gender == "" {
+	} else if updateUser.Name != "" && updateUser.Password == "" && updateUser.Gender != "" {
 		statement, err := db.Prepare("UPDATE users SET name_user = ?, gender = ? WHERE no_telp = ?")
 		if err != nil {
 			return -1, "error statement : ", err

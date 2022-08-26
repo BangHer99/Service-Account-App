@@ -116,12 +116,10 @@ func main() {
 						updateUser.Password = strings.TrimSuffix(updateUser.Password, "\n")
 
 						if updateUser.Password != "" {
-							inputPass = updateUser.Password
+							updatePassByte := []byte(updateUser.Password)
+							hashPass, _ := bcrypt.GenerateFromPassword(updatePassByte, bcrypt.DefaultCost)
+							updateUser.Password = string(hashPass)
 						}
-
-						updatePassByte := []byte(updateUser.Password)
-						hashPass, _ := bcrypt.GenerateFromPassword(updatePassByte, bcrypt.DefaultCost)
-						updateUser.Password = string(hashPass)
 
 						succes, strUpt, errUptusers := users.UpdateDataUser(db, &updateUser, inputTelp)
 						if err != nil {

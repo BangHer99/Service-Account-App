@@ -264,6 +264,7 @@ func main() {
 					case 8:
 
 						back = "y"
+						backMenu = "n"
 
 					default:
 
